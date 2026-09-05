@@ -150,6 +150,14 @@ sandbox
 focus 'aaaa-1111; rm -rf /'
 check 'a key that is not a key is refused outright' '' "$(stub_log)"
 
+# The same rejection, on the one path where a bad key would otherwise reach a
+# command: a mirrored key is handed straight to herdr, so if the guard ever
+# goes the shell metacharacters go with it. Without this the guard is only
+# defence in depth and deleting it changes no test.
+sandbox
+focus 'herdr:w1:p2; rm -rf /'
+check 'a mirrored key that is not a key never reaches herdr' '' "$(stub_log)"
+
 sandbox
 # shellcheck disable=SC2016  # the literal text is the point: it must not expand
 focus '$(whoami)'

@@ -94,4 +94,7 @@ Terminal Delight.
 sh tests/run.sh
 ```
 
-Stub-driven: no herd, herdr, Hyprland or desktop session required.
+28 checks, stub-driven: no herd, herdr, Hyprland or desktop session required.
+CI runs the same suite, `shellcheck`s both scripts as POSIX `sh`, and gutters
+the key validation to confirm the tests notice — a suite that cannot fail
+proves nothing.

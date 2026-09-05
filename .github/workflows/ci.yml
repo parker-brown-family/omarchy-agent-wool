@@ -1,0 +1,46 @@
+name: ci
+
+on:
+  push:
+    branches: [master, main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install shellcheck
+        run: sudo apt-get update && sudo apt-get install -y shellcheck
+
+      # The plugin's scripts are POSIX sh, and the CI shell is not the shell
+      # they will run under. Check them as sh so a bashism cannot pass here and
+      # fail on a dash-based /bin/sh.
+      - name: Lint the shell
+        run: shellcheck -s sh wool/wool-scan.sh wool/wool-focus.sh tests/run.sh tests/stubs/*
+
+      - name: Syntax-check as POSIX sh
+        run: |
+          for f in wool/wool-scan.sh wool/wool-focus.sh tests/run.sh tests/stubs/*; do
+            sh -n "$f"
+          done
+
+      - name: Run the tests
+        run: sh tests/run.sh
+
+      # A suite that cannot fail proves nothing. Gut the key validation and
+      # confirm the tests notice, so a future refactor that quietly removes it
+      # shows up here rather than in someone's shell history. The whole
+      # function is mutated rather than one call site: the guard runs twice on
+      # the mirrored path, so deleting either copy alone changes no behaviour.
+      - name: Prove the tests can fail
+        run: |
+          cp wool/wool-focus.sh /tmp/wool-focus.orig
+          sed -i 's/^valid_token() {/valid_token() { return 0;/' wool/wool-focus.sh
+          if sh tests/run.sh >/dev/null 2>&1; then
+            echo "the suite passed with the validation removed; it is not testing it"
+            exit 1
+          fi
+          cp /tmp/wool-focus.orig wool/wool-focus.sh
+          echo "the suite catches the mutation"
