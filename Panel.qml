@@ -128,8 +128,12 @@ Panel {
     return st
   }
 
+  // A session parked in the home directory would otherwise title its card
+  // with the username — four cards all reading "parker" on the first live
+  // wall. Home is "~"; everything else is its directory's name.
   function projectOf(s) {
     var c = s.cwd || ""
+    if (c === home) return "~"
     var i = c.lastIndexOf("/")
     return i >= 0 ? c.substring(i + 1) : c
   }

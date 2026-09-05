@@ -5,6 +5,8 @@ agent on the machine as a card — a face whose colour says how it's doing, the
 last prompt it was given, and its context vitals — with a click that takes you
 to that agent's window.
 
+![The wall: eight live agents, attention first](docs/wall.png)
+
 Wool is the presence half of a pair:
 
 - **[Herd](https://github.com/parker-brown-family/omarchy-herd)** is
