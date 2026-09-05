@@ -134,4 +134,6 @@ esac
 
 # Looking at an agent is what turns "done" into "idle". Best effort; a wall
 # whose herd has vanished still focuses fine.
-command -v "$HERD" >/dev/null 2>&1 && "$HERD" seen "$KEY" 2>/dev/null || true
+if command -v "$HERD" >/dev/null 2>&1; then
+  "$HERD" seen "$KEY" 2>/dev/null || true
+fi

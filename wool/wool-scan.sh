@@ -40,7 +40,9 @@ fi
 # Refresh the herdr mirror first, so the wall the reader is looking at shows
 # herdr's agents at wall-tick freshness. Absent herd, absent herdr: fine —
 # the mirror just does not move.
-command -v "$HERD" >/dev/null 2>&1 && "$HERD" sync-herdr 2>/dev/null || true
+if command -v "$HERD" >/dev/null 2>&1; then
+  "$HERD" sync-herdr 2>/dev/null || true
+fi
 
 VITALS='[]'
 if [ -f "$STATE" ] && command -v "$TD" >/dev/null 2>&1; then
