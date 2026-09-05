@@ -1,0 +1,22 @@
+#!/bin/sh
+# Stub terminal-delight: `agent-vitals <t1> <t2> ...` emits one plausible row
+# per transcript, keyed like the real thing keys them — by session id, which
+# is the transcript's basename.
+echo "td $*" >>"${WOOL_STUB_LOG:-/dev/null}"
+case "${WOOL_STUB_TD_MODE:-ok}" in
+  garbage)
+    echo 'this is not json'
+    ;;
+  *)
+    shift # agent-vitals
+    printf '['
+    first=1
+    for t in "$@"; do
+      s=$(basename "$t" .jsonl)
+      [ "$first" -eq 1 ] || printf ','
+      first=0
+      printf '{"session":"%s","window":0.42,"fatigue":0.10,"relevance":0.90,"call":"RUN","tokens":84000,"limit":200000,"model":"OPUS","effort":"MAX"}' "$s"
+    done
+    printf ']\n'
+    ;;
+esac

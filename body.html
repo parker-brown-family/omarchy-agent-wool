@@ -1,0 +1,288 @@
+<div class="sec xsec" data-open="false">
+  <div class="stitle xhdr" onclick="toggleXSec(this)"><span class="xtrig">&#x25BC;</span> ELI5 &#x2014; tl;dr</div>
+  <div class="xbody">
+  <div class="cal ci commentable" data-id="eli5" data-title="ELI5">
+    <span class="hint-tip">&#x1F4AC; comment</span>
+    <div class="ct">&#x1F4A1; Plain English</div>
+    Wool is Terminal Delight's Agent Wall grown into an Omarchy plugin: press the flock icon on the bar and a full-screen overlay shows every coding agent on the machine as a card &#x2014; a sheepish robot face whose colour says how it's doing (white = fine, dark grey = needs you, black = broken), the last prompt it saw, and its token vitals. Click a card and you're looking at that agent's window. It pairs with Herd: Herd is <em>attention</em> (which sheep needs you, from the bar), Wool is <em>presence</em> (the whole flock, on the wall). Done looks like: bar icon &#x2192; wall &#x2192; click &#x2192; focused agent, with zero writes to any terminal.
+  </div>
+  </div>
+</div>
+
+<div class="sec xsec" data-open="false">
+  <div class="stitle xhdr" onclick="toggleXSec(this)"><span class="xtrig">&#x25BC;</span> What Wool is &#x2014; and the parity line with TD</div>
+  <div class="xbody">
+  <div class="cal ci commentable" data-id="parity" data-title="Parity line">
+    <span class="hint-tip">&#x1F4AC; comment</span>
+    <div class="ct">&#x1F9F6; Some parity, on purpose</div>
+    TD's wall binds <strong>panes</strong> &#x2014; it can screenshot live buffers, crawl their text, and restyle them, because it lives inside the terminal's render loop. Wool binds <strong>sessions</strong> &#x2014; the unit any process outside TD can actually see. That single difference draws the whole parity line, and it matches the graduation test: a feature ports iff its state sits behind an oracle a widget can query and its presentation is compositor-level.
+  </div>
+  <p><strong>Ports to Wool:</strong> agent cards with face + state, transcript-derived prompt snippets, &#x394;/&#x3A3; token counts, the three vitals bars (CTX WINDOW &#xB7; FATIGUE &#xB7; RELEVANCE), state filter counts, click-to-focus.</p>
+  <p><strong>Stays TD's moat (deliberately not ported):</strong> live buffer thumbnails, per-pane text crawl, pane restyling ("agents can restyle"), copy chips, the Alt+R reader. Those are the reasons to graduate from the plugin to the terminal &#x2014; Wool advertising them would erase TD's pitch.</p>
+  <p><strong>Composes with Herd, never competes:</strong> Herd's bar badge answers "who needs me <em>right now</em>" and jumps to the stuck one. Wool's wall answers "what does my whole flock look like". Both may be installed; neither requires the other.</p>
+  </div>
+</div>
+
+<div class="sec xsec" data-open="false">
+  <div class="stitle xhdr" onclick="toggleXSec(this)"><span class="xtrig">&#x25BC;</span> Where this stands &#x2014; built overnight 2026-09-05</div>
+  <div class="xbody">
+  <div class="cal ci commentable" data-id="status" data-title="Status">
+    <span class="hint-tip">&#x1F4AC; comment</span>
+    <div class="ct">&#x2705; Shipped, with one deliberate reshape</div>
+    Between this plan being written and you waking up, the state-detection leg was pulled out of Wool and built where it belonged: <strong>Crook v0.1</strong>, the agent-state bus from the ADDev decision record, now exists (Rust, 12 tests, installed), is fed by machine-global Claude Code hooks, and was verified live &#x2014; the probe session's idle&#x2192;working&#x2192;done lifecycle was captured, and the running fleet self-reported within minutes. Wool v0.1 is built on top as a pure consumer: 27/27 stub tests, qmllint clean, schema-validated, staged in the shell as <code>disabled</code>. Enable it with <code>omarchy plugin enable brownfamilysports.wool</code>. Tickets below are annotated with what landed.
+  </div>
+  <p><strong>Who feeds the crook (the question you asked):</strong> the <em>agents</em> feed it &#x2014; Claude Code's own hooks self-report on every prompt, tool call, permission ask, and stop; <code>crook sync-herdr</code> mirrors in agents that can't speak for themselves; anything can <code>crook report</code>. Omarchy never feeds it &#x2014; Omarchy (Wool, Herd, notifications) <em>drinks</em> from it. The one back-signal from a display is <code>crook seen</code>: focusing an agent is what turns done-and-unseen into plain idle.</p>
+  <pre>feed:  claude hooks ─┐
+       crook report ─┼─→  ~/.local/state/crook/state.json  ─→  read: Wool wall · Herd (later) · TD (later) · crook watch scripts
+       sync-herdr  ──┘                                     ←─  seen: a display saying "a human looked"</pre>
+  </div>
+</div>
+
+<div class="sec xsec" data-open="false">
+  <div class="stitle xhdr" onclick="toggleXSec(this)"><span class="xtrig">&#x25BC;</span> Oracles &#x2014; where the truth comes from</div>
+  <div class="xbody">
+  <p><strong>Reshaped:</strong> state now has exactly one oracle &#x2014; the Crook bus &#x2014; and Wool detects nothing itself. Building wool-scan as its own detector would have created the <em>fourth</em> parallel state-detector on this machine, the exact pathology the Crook decision record was written to stop.</p>
+  <ul>
+    <li><strong>crook state.json</strong> &#x2014; who exists, what state, from which source (<code>self</code> beats <code>herdr</code>), each entry carrying its own <code>stale_after</code>; past it the entry reads as unknown, full stop. Claude sessions self-report via hooks (which also capture the last prompt, so no transcript is read for the card snippet); <code>crook sync-herdr</code> mirrors non-self-reporting agents.</li>
+    <li><strong>terminal-delight agent-vitals</strong> &#x2014; the shipped CLI (verified: batches transcripts, emits JSON) computes the CTX WINDOW / FATIGUE / RELEVANCE trio plus the model&#xB7;effort chip. Optional enrichment, read only while the wall is open.</li>
+    <li><strong>Transcripts directly</strong> &#x2014; no longer read by Wool at all. Crook carries the transcript <em>path</em> for the vitals CLI; the snippet rides the hook payload. The discovery sweep from the original plan is gone entirely.</li>
+  </ul>
+  <div class="cal cw commentable" data-id="unknown-not-zero" data-title="Unknown is not zero">
+    <span class="hint-tip">&#x1F4AC; comment</span>
+    <div class="ct">&#x26A0;&#xFE0F; Unknown is not zero</div>
+    A card with no vitals (no TD binary, a Codex session, an unreadable transcript) renders <em>absence</em> &#x2014; a dashed empty track or no track at all &#x2014; never a zero-length bar. A zero-length bar is a confident wrong number; the snapshot JSON keeps every unmeasured field null, and only the QML renderer decides how null draws.
+  </div>
+  </div>
+</div>
+
+<div class="sec xsec" data-open="false">
+  <div class="stitle xhdr" onclick="toggleXSec(this)"><span class="xtrig">&#x25BC;</span> Architecture &#x2014; bar widget, overlay, and one scan script</div>
+  <div class="xbody">
+  <p>Structure mirrors omarchy-herd exactly: <code>manifest.json</code> (kind <code>bar-widget</code>, id <code>brownfamilysports.wool</code>, category AI), <code>Panel.qml</code> as the entry point, a <code>wool/</code> directory of helper scripts, <code>tests/run.sh</code> with stub binaries.</p>
+  <ul>
+    <li><strong>Bar widget:</strong> a flock glyph with up to three counts &#x2014; white/grey/black tier tallies. <code>hideWhenEmpty</code> default true. Click toggles the wall.</li>
+    <li><strong>The wall:</strong> a Quickshell layer-shell surface over the focused monitor's workspace &#x2014; the toggle-overlay form. Card grid grouped the way TD groups (project dir), state chips, filter counts along the top.</li>
+    <li><strong>wool-scan:</strong> one script that merges the three oracles into a single snapshot JSON (herdr snapshot if the socket answers, transcript sweep, vitals per session when the CLI exists). QML renders the snapshot and nothing else &#x2014; the scan is the only thing that touches disk.</li>
+    <li><strong>Scan gating:</strong> wool-scan runs only while the wall is open (plus one cheap tally pass for the bar counts on a slow timer). TD learned this the hard way &#x2014; the ungated sweep read ~3.5MB/s with the wall closed.</li>
+  </ul>
+  <pre>bar click &#x2500;&#x2192; wall opens &#x2500;&#x2192; wool-scan (herdr snapshot + transcript sweep + vitals) &#x2500;&#x2192; snapshot.json &#x2500;&#x2192; QML cards
+card click &#x2500;&#x2192; herdr agent focus &lt;id&gt;   (herded agent)
+          &#x2514;&#x2192; hyprctl dispatch focuswindow address:&lt;addr&gt;   (pid&#x2192;window fallback)</pre>
+  </div>
+</div>
+
+<div class="sec xsec" data-open="false">
+  <div class="stitle xhdr" onclick="toggleXSec(this)"><span class="xtrig">&#x25BC;</span> The flock &#x2014; card anatomy and state colours</div>
+  <div class="xbody">
+  <p>Each card: sheepish robot face (state-keyed), agent program chip (CLAUDE / SHELL / &#x2026;), project directory, last prompt snippet from the transcript, state chip, &#x394; latest-turn and &#x3A3; total tokens, and the three vitals bars when measured.</p>
+  <div class="cal ci commentable" data-id="fleece-tiers" data-title="Fleece tiers">
+    <span class="hint-tip">&#x1F4AC; comment</span>
+    <div class="ct">&#x1F411; Fleece says the tier, chip says the state</div>
+    The robot's fleece carries exactly three colours &#x2014; <strong>white</strong> = status good (running, healthy idle), <strong>dark grey</strong> = attention (done, question waiting, unknown/undetected state), <strong>black</strong> = error (failed, crashed, unreadable). Fine-grained states (RUN &#xB7; PAUSED &#xB7; FAIL &#xB7; DONE &#xB7; IDLE) live in the chip; the fleece is the squint-from-across-the-room signal. Note "unknown" lands in grey <em>by definition</em> &#x2014; an undetected state is an attention state, not a good one.
+  </div>
+  <p>Colour means direction, length means number &#x2014; the vitals bars keep TD's rule: each bar's ramp is tied to the threshold its verdict acts on, so a bar can't look calm beside a chip that says act.</p>
+  </div>
+</div>
+
+<div class="sec xsec" data-open="false">
+  <div class="stitle xhdr" onclick="toggleXSec(this)"><span class="xtrig">&#x25BC;</span> Face art &#x2014; the playhouse stays canon</div>
+  <div class="xbody">
+  <p>The sheepish robot is authored in <strong>agent-playhouse</strong> (<code>web/art/robot.svg</code> + <code>props.svg</code>, under CONVENTIONS.md's rules &#x2014; verb first, then draw), reviewed on <code>/sheet.html</code>, enforced by <code>bun test</code>. Everything downstream is a photograph: playhouse &#x2192; TD app &#x2192; web wall, and now &#x2192; Wool as one more publish target.</p>
+  <p>Parker generates the sheep variant himself (white/grey/black fleece states); Wool's job is only the receiving end: a publish target with a <code>--check</code> mode, because a stale derived copy once sat unnoticed for months. Wool never edits art.</p>
+  </div>
+</div>
+
+<div class="sec xsec" data-open="false">
+  <div class="stitle xhdr" onclick="toggleXSec(this)"><span class="xtrig">&#x25BC;</span> Implementation tickets</div>
+  <div class="xbody">
+
+  <div class="trow expandable commentable" data-id="w-001" data-title="W-001 scaffold" data-open="false">
+    <span class="hint-tip">&#x1F4AC; comment</span>
+    <div class="trow-hdr">
+      <button class="texp" onclick="toggleTicket(this,event)" title="Expand details">&#x25B6;</button>
+      <div class="tid">W-001</div>
+      <div class="ttl">Repo scaffold + manifest, mirroring omarchy-herd &#x2705; landed</div>
+      <span class="bdg bh">high</span>
+    </div>
+    <div class="trow-body">
+      <p><strong>Intent:</strong> git init in <code>~/Work/omarchy-agent-wool</code>; <code>manifest.json</code> with id <code>brownfamilysports.wool</code>, name "Wool", kind <code>bar-widget</code>, category AI, schema keys <code>hideWhenEmpty</code> and <code>socketPath</code> (same semantics as Herd's); LICENSE, README, CHANGELOG, <code>tests/run.sh</code> skeleton.</p>
+      <pre>Given a stock Omarchy box with the plugin installed
+When the bar loads its widgets
+Then Wool appears in the AI category with its two settings
+And uninstalling leaves no Hyprland or Quickshell residue</pre>
+      <p><strong>Gotcha:</strong> remote owner decides identity &#x2014; this is a <code>parker-brown-family</code> repo; verify <code>git config user.email</code> is <code>parker@brownfamilysports.com</code> before the first commit, and never hand-set it.</p>
+      <p><strong>Verify:</strong> plugin loads in the bar beside Herd with both installed.</p>
+    </div>
+  </div>
+
+  <div class="trow expandable commentable" data-id="w-002" data-title="W-002 wool-scan" data-open="false">
+    <span class="hint-tip">&#x1F4AC; comment</span>
+    <div class="trow-hdr">
+      <button class="texp" onclick="toggleTicket(this,event)" title="Expand details">&#x25B6;</button>
+      <div class="tid">W-002</div>
+      <div class="ttl">wool-scan &#x2014; a joiner over the Crook bus, not a detector &#x2705; landed (reshaped)</div>
+      <span class="bdg bh">high</span>
+    </div>
+    <div class="trow-body">
+      <p><strong>As built:</strong> wool-scan shrank from detector to joiner. It runs <code>crook sync-herdr</code>, reads crook's file for the transcript paths, batches one <code>terminal-delight agent-vitals</code> call, and publishes <code>wall.json</code> (vitals keyed by session) atomically, flock-coalesced across per-monitor panels. Sessions, states, snippets and staleness all come from the bus; a session with no measurable vitals is <em>absent from the map</em>, never zeroed. Verified against the live fleet: four real sessions measured in one call.</p>
+      <pre>Given agents under herdr, Claude sessions on hooks, and no TD binary
+When wool-scan runs
+Then the wall publishes with an empty vitals map and every card still draws
+And with the TD binary present each transcript-bearing session is measured</pre>
+      <p><strong>Gotchas that moved with the reshape:</strong> the transcript traps (mtime lies, pane/session collisions, the cost-state 1M marker) are now the vitals CLI's problem &#x2014; TD already paid for them and its oracle carries the tests. What Wool keeps: the sweep-only-while-open gate, and the one-line staleness contract on every read.</p>
+      <p><strong>Verify:</strong> <code>sh tests/run.sh</code> &#x2014; the scan suite covers the join, the honest-absence rule, garbage vitals output, missing crook, and missing state.</p>
+    </div>
+  </div>
+
+  <div class="trow expandable commentable" data-id="w-003" data-title="W-003 bar widget" data-open="false">
+    <span class="hint-tip">&#x1F4AC; comment</span>
+    <div class="trow-hdr">
+      <button class="texp" onclick="toggleTicket(this,event)" title="Expand details">&#x25B6;</button>
+      <div class="tid">W-003</div>
+      <div class="ttl">Bar widget &#x2014; flock glyph, tier tallies, wall toggle &#x2705; landed</div>
+      <span class="bdg bm">medium</span>
+    </div>
+    <div class="trow-body">
+      <p><strong>Intent:</strong> flock icon + up to three counts (white/grey/black tiers), fed by a slow-timer tally pass (counts only, no vitals); click toggles the wall; <code>hideWhenEmpty</code> honoured.</p>
+      <pre>Given five agents where one has failed and one is waiting on a question
+When the bar renders
+Then the widget shows 3 white, 1 grey, 1 black
+And clicking it opens the wall on the focused monitor</pre>
+      <p><strong>Gotcha:</strong> the tally pass must stay cheap enough to run with the wall closed &#x2014; states and counts only, never the vitals sweep. If the tally itself needs transcript reads, cap it to newest-record peeks.</p>
+      <p><strong>Verify:</strong> disk-read rate with the wall closed stays near zero (the 3.5MB/s regression is the failure mode).</p>
+    </div>
+  </div>
+
+  <div class="trow expandable commentable" data-id="w-004" data-title="W-004 wall overlay" data-open="false">
+    <span class="hint-tip">&#x1F4AC; comment</span>
+    <div class="trow-hdr">
+      <button class="texp" onclick="toggleTicket(this,event)" title="Expand details">&#x25B6;</button>
+      <div class="tid">W-004</div>
+      <div class="ttl">The wall &#x2014; toggled overlay with the card grid &#x2705; landed (KeyboardPanel form)</div>
+      <span class="bdg bh">high</span>
+    </div>
+    <div class="trow-body">
+      <p><strong>Intent:</strong> Quickshell layer-shell surface, focused monitor, Esc/click-outside closes; cards grouped by project dir; state-tier filter counts along the top; opening starts the wool-scan loop, closing stops it.</p>
+      <pre>Given the wall is closed
+When the flock icon is clicked
+Then the wall opens within a second showing every session as a card
+And closing it stops all transcript reads within one scan interval</pre>
+      <p><strong>Gotcha:</strong> layer-shell keyboard focus &#x2014; the overlay must take keyboard (for Esc) without stealing it permanently from the tiled windows underneath when it closes; test focus return explicitly on Hyprland.</p>
+      <p><strong>Verify:</strong> open/close ten times; focus always returns to the previously focused window.</p>
+    </div>
+  </div>
+
+  <div class="trow expandable commentable" data-id="w-005" data-title="W-005 cards" data-open="false">
+    <span class="hint-tip">&#x1F4AC; comment</span>
+    <div class="trow-hdr">
+      <button class="texp" onclick="toggleTicket(this,event)" title="Expand details">&#x25B6;</button>
+      <div class="tid">W-005</div>
+      <div class="ttl">Card anatomy &#x2014; face, snippet, vitals bars &#x2705; landed</div>
+      <span class="bdg bm">medium</span>
+    </div>
+    <div class="trow-body">
+      <p><strong>Intent:</strong> face keyed to fleece tier, program chip, project dir, last-prompt snippet, state chip, &#x394;/&#x3A3; tokens, vitals bars when measured, dashed absence when not.</p>
+      <pre>Given a session whose vitals are unmeasured
+When its card renders
+Then the vitals area shows an explicit empty state
+And no bar renders at zero length</pre>
+      <p><strong>Gotcha:</strong> snippet text is untrusted content from transcripts &#x2014; render as plain text, never rich; and truncate by grapheme, not byte, or CJK/emoji prompts shear mid-character.</p>
+      <p><strong>Verify:</strong> a card for each tier + one vitals-less card reviewed side by side against TD's wall for family resemblance.</p>
+    </div>
+  </div>
+
+  <div class="trow expandable commentable" data-id="w-006" data-title="W-006 focus" data-open="false">
+    <span class="hint-tip">&#x1F4AC; comment</span>
+    <div class="trow-hdr">
+      <button class="texp" onclick="toggleTicket(this,event)" title="Expand details">&#x25B6;</button>
+      <div class="tid">W-006</div>
+      <div class="ttl">Click-to-focus &#x2014; herdr first, hyprctl fallback &#x2705; landed (+ marks the agent seen)</div>
+      <span class="bdg bm">medium</span>
+    </div>
+    <div class="trow-body">
+      <p><strong>Intent:</strong> card click closes the wall and focuses the agent's window: <code>herdr agent focus</code> for herded agents; otherwise walk the session's pid to a Hyprland window address and <code>hyprctl dispatch focuswindow</code>. A session with no reachable window (cloud, dead terminal) gets a shrug affordance, not a silent no-op.</p>
+      <pre>Given an agent running in a plain Alacritty window outside herdr
+When its card is clicked
+Then that window is focused on its workspace
+And the wall has closed</pre>
+      <p><strong>Gotcha:</strong> the pid in the transcript is the agent process, not the terminal &#x2014; the walk is child&#x2192;parent up the process tree until a pid matches a Hyprland client, and it can legitimately fail; that failure is the shrug case, never a crash.</p>
+      <p><strong>Verify:</strong> three focus paths exercised: herded, plain-window, unreachable.</p>
+    </div>
+  </div>
+
+  <div class="trow expandable commentable" data-id="w-007" data-title="W-007 art pipeline" data-open="false">
+    <span class="hint-tip">&#x1F4AC; comment</span>
+    <div class="trow-hdr">
+      <button class="texp" onclick="toggleTicket(this,event)" title="Expand details">&#x25B6;</button>
+      <div class="tid">W-007</div>
+      <div class="ttl">Sheep-robot publish target with --check &#x23F3; open &#x2014; interim vector face shipped</div>
+      <span class="bdg bm">medium</span>
+    </div>
+    <div class="trow-body">
+      <p><strong>Intent:</strong> extend the playhouse publish pipeline with Wool as a derived target &#x2014; the three fleece-tier faces rasterised into <code>assets/</code> here, plus a <code>--check</code> mode that fails when the copy is stale. Blocked on the sheep variant existing in <code>agent-playhouse/web/art/robot.svg</code> (Parker's thread).</p>
+      <pre>Given the playhouse robot gains its sheep states
+When the publish script runs with the wool target
+Then assets/ holds the three tier faces
+And --check exits non-zero whenever robot.svg is newer than the copies</pre>
+      <p><strong>Gotcha:</strong> one direction only &#x2014; playhouse &#x2192; wool. An edit made here to "just fix" a face is the exact stale-fork failure the pipeline exists to prevent; until the sheep art lands, ship the existing robot faces so nothing blocks on art.</p>
+      <p><strong>Verify:</strong> <code>--check</code> green after publish, red after touching robot.svg.</p>
+    </div>
+  </div>
+
+  <div class="trow expandable commentable" data-id="w-008" data-title="W-008 tests" data-open="false">
+    <span class="hint-tip">&#x1F4AC; comment</span>
+    <div class="trow-hdr">
+      <button class="texp" onclick="toggleTicket(this,event)" title="Expand details">&#x25B6;</button>
+      <div class="tid">W-008</div>
+      <div class="ttl">Stub-driven tests, the omarchy-herd way &#x2705; landed (27 checks)</div>
+      <span class="bdg bm">medium</span>
+    </div>
+    <div class="trow-body">
+      <p><strong>Intent:</strong> <code>tests/run.sh</code> with stub binaries for <code>herdr</code>, <code>hyprctl</code>, and <code>terminal-delight</code> plus fixture transcripts; asserts the snapshot shape, the tier mapping, the null-vitals rule, and the focus-path selection &#x2014; no live compositor needed.</p>
+      <pre>Given the stubs and fixture transcripts
+When tests/run.sh executes
+Then every assertion passes on a machine with none of the real binaries
+And a fixture with an unreadable transcript maps to the black tier</pre>
+      <p><strong>Gotcha:</strong> fixture transcripts drift &#x2014; pin them from real sessions once and record which schema day they came from, because Claude Code's record shapes move.</p>
+      <p><strong>Verify:</strong> green in a clean container.</p>
+    </div>
+  </div>
+
+  </div>
+</div>
+
+<div class="sec xsec" data-open="false">
+  <div class="stitle xhdr" onclick="toggleXSec(this)"><span class="xtrig">&#x25BC;</span> Tradeoffs &#x2014; deliberately not done</div>
+  <div class="xbody">
+  <ul>
+    <li><strong>No persistent kiosk mode in v1.</strong> Chosen: toggle overlay. A parked-monitor TV mode forfeits the scan gating and needs its own window lifecycle &#x2014; a clean v2 once the overlay proves the card grid.</li>
+    <li><strong>No PTY writes, no prompting from cards.</strong> "Watches agents &#xB7; never writes to a PTY" stays literally true; <code>herdr agent prompt</code> exists if that line ever moves, but moving it is a doctrine change, not a feature.</li>
+    <li><strong>No buffer thumbnails or text crawl.</strong> The moat clause &#x2014; those require living inside the terminal's render loop, and they are TD's reason to exist.</li>
+    <li><strong>Vitals are an optional enhancement, not a dependency.</strong> Wool installs and works on a box with no terminal-delight binary; it just shows fewer numbers, honestly.</li>
+    <li><strong>Claude transcripts only in v1.</strong> Codex rollouts have a different schema (TD's #279 found CTX WINDOW reachable but nothing else); Codex sessions appear via herdr presence with null vitals rather than a half-invented schema port.</li>
+  </ul>
+  </div>
+</div>
+
+<div class="sec xsec" data-open="false">
+  <div class="stitle xhdr" onclick="toggleXSec(this)"><span class="xtrig">&#x25BC;</span> Risks and gotchas</div>
+  <div class="xbody">
+  <ul>
+    <li><strong>Resolved by the Crook reshape:</strong> the original highest risk &#x2014; wool-scan inheriting every transcript trap as a fourth parallel detector &#x2014; is gone; state has one oracle and the traps live with TD's already-tested vitals CLI. The residual risk moved: <strong>Claude visibility now depends on the crook hooks</strong> being installed (they are, machine-global, guarded with <code>|| true</code> so a missing binary can never break a session), and a session started before the hooks existed stays invisible until its next event.</li>
+    <li><strong>herdr absent or socket dead:</strong> handled &#x2014; <code>sync-herdr</code> publishes an honest empty mirror and self-reported entries are untouched; covered by tests.</li>
+    <li><strong>Keybind for the wall:</strong> Omarchy owns the SUPER map and fcitx5 already stole Ctrl+Shift+U once; v1 binds nothing and relies on the bar click, with a keybind as a user opt-in snippet in the README.</li>
+    <li><strong>Stale derived art:</strong> the --check mode is the guard; wire it into tests/run.sh so CI catches it, not a passerby months later.</li>
+  </ul>
+  </div>
+</div>
+
+<div class="sec xsec" data-open="false">
+  <div class="stitle xhdr" onclick="toggleXSec(this)"><span class="xtrig">&#x25BC;</span> Open questions</div>
+  <div class="xbody">
+  <ul>
+    <li><strong>Filter chips:</strong> TD's wall filters by group, program, and state. Does v1 need more than the three tier counts &#x2014; is project-dir grouping enough structure for a wall you glance at?</li>
+    <li><strong>Multi-monitor:</strong> overlay on the focused monitor only, or every monitor at once when the flock is large? (Focused-only is the v1 assumption.)</li>
+    <li><strong>Publish home:</strong> does Wool ship to the same plugin registry/channel as Herd and Delight-O-Matic, and does its README cross-advertise TD the way the omarchy kiosk page does?</li>
+  </ul>
+  </div>
+</div>

@@ -1,0 +1,4 @@
+#!/bin/sh
+# Stub herdr: records focus calls.
+echo "herdr $*" >>"${WOOL_STUB_LOG:-/dev/null}"
+exit 0

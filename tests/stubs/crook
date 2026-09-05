@@ -1,0 +1,5 @@
+#!/bin/sh
+# Stub crook: records every invocation; state lives in the fixture file the
+# test wrote, so the real binary must never be reached.
+echo "crook $*" >>"${WOOL_STUB_LOG:-/dev/null}"
+exit 0

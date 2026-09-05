@@ -1,0 +1,13 @@
+#!/bin/sh
+# Stub hyprctl: `clients -j` names one window at a pid the test controls;
+# dispatches are logged. WOOL_STUB_HYPR=old makes the Lua dispatcher fail the
+# way Hyprland <0.56 does, to prove the legacy fallback fires.
+if [ "${1:-}" = "clients" ]; then
+  printf '[{"pid": %s, "address": "0xabc123"}]\n' "${WOOL_STUB_WINPID:-0}"
+  exit 0
+fi
+echo "hyprctl $*" >>"${WOOL_STUB_LOG:-/dev/null}"
+case "${WOOL_STUB_HYPR:-new}" in
+  old) case "$*" in *hl.dsp*) exit 7 ;; *) exit 0 ;; esac ;;
+  *) exit 0 ;;
+esac

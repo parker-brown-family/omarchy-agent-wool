@@ -1,0 +1,38 @@
+{
+  "schemaVersion": 1,
+  "id": "brownfamilysports.wool",
+  "name": "Wool",
+  "version": "0.1.0",
+  "author": "Parker Brown",
+  "license": "MIT",
+  "description": "The whole flock on one wall — every coding agent's face, state and vitals, fed by the crook state bus",
+  "kinds": ["bar-widget"],
+  "entryPoints": {
+    "barWidget": "Panel.qml"
+  },
+  "barWidget": {
+    "displayName": "Wool",
+    "description": "One bar icon and one wall: every agent on the machine as a card — a face whose colour says how it's doing, the last prompt it saw, its context vitals — and a click that takes you to its window. Herd is attention; Wool is presence.",
+    "category": "AI",
+    "allowMultiple": false,
+    "defaults": {
+      "hideWhenEmpty": true,
+      "scanIntervalMs": 2500
+    },
+    "schema": [
+      {
+        "key": "hideWhenEmpty",
+        "type": "boolean",
+        "label": "Hide when no agents are reported",
+        "defaultValue": true
+      },
+      {
+        "key": "scanIntervalMs",
+        "type": "number",
+        "label": "Wall refresh interval (ms)",
+        "defaultValue": 2500,
+        "description": "How often the open wall re-syncs herdr and re-reads vitals. Nothing is scanned while the wall is closed."
+      }
+    ]
+  }
+}
