@@ -7,26 +7,29 @@ to that agent's window.
 
 ![The wall: eight live agents, attention first](docs/wall.png)
 
-Wool is the presence half of a pair:
+Wool is the presence third of the shepherd family:
 
-- **[Herd](https://github.com/parker-brown-family/omarchy-herd)** is
-  *attention* — which agent needs you right now, from the bar.
-- **Wool** is *presence* — what the whole fleet looks like, on a toggled wall.
+- **[Herd](https://github.com/parker-brown-family/herd)** is the *flock's
+  state itself* — the local agent-state bus everything reads.
+- **[Crook](https://github.com/parker-brown-family/omarchy-crook)** is
+  *attention* — the shepherd's hook that singles out the one agent that needs
+  you, from the bar.
+- **Wool** is *presence* — the whole flock's coat, on a toggled wall.
 
-They compose. Neither requires the other.
+They compose. None requires the others.
 
 ## Where the truth comes from
 
 Wool draws; it detects nothing. All state comes from
-**[crook](https://github.com/parker-brown-family/addev)**, the local
+**[Herd](https://github.com/parker-brown-family/herd)**, the local
 agent-state bus, which publishes one file at
-`~/.local/state/crook/state.json`:
+`~/.local/state/herd/state.json`:
 
-- **Agents feed the crook.** Claude Code sessions self-report through hooks
-  (`crook hook`); anything can `crook report`; `crook sync-herdr` mirrors in
+- **Agents feed the herd.** Claude Code sessions self-report through hooks
+  (`herd hook`); anything can `herd report`; `herd sync-herdr` mirrors in
   the agents that cannot speak for themselves.
-- **Displays drink from it.** Wool, Herd, a tmux status line, a script
-  blocking on `crook watch` — one writer, many readers.
+- **Displays drink from it.** Wool, Crook, a tmux status line, a script
+  blocking on `herd watch` — one writer, many readers.
 - **Looking back is the one write.** Clicking a card focuses the agent's
   window and marks it `seen`, which is what turns *finished-and-unseen* into
   plain idle.
@@ -60,8 +63,8 @@ omarchy plugin add https://github.com/parker-brown-family/omarchy-agent-wool
 ```
 
 Then add the **Wool** widget to your bar. For Claude sessions to appear, the
-crook hooks must be installed (see the addev repository); herdr agents appear
-whenever herdr is running.
+herd hooks must be installed (`cargo install herd-bus`, then `herd hooks` —
+see the Herd repository); herdr agents appear whenever herdr is running.
 
 Toggle the wall from a keybinding if you like:
 
@@ -91,4 +94,4 @@ Terminal Delight.
 sh tests/run.sh
 ```
 
-Stub-driven: no crook, herdr, Hyprland or desktop session required.
+Stub-driven: no herd, herdr, Hyprland or desktop session required.

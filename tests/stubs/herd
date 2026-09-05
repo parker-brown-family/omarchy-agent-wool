@@ -1,0 +1,5 @@
+#!/bin/sh
+# Stub herd: records every invocation; state lives in the fixture file the
+# test wrote, so the real binary must never be reached.
+echo "herd $*" >>"${WOOL_STUB_LOG:-/dev/null}"
+exit 0

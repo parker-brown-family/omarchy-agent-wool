@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.2.0 — 2026-09-05
+
+The family found its true names, and Wool follows: the state bus is **Herd**
+(was crook; `~/.local/state/herd/state.json`, verbs `herd sync-herdr` /
+`herd seen`), and the attention tray is **Crook** (was the Herd plugin).
+Wool's job is unchanged — it reads the bus and draws the flock. Also:
+home-directory sessions title their card `~`, and the README wears the first
+live wall.
+
 ## 0.1.0 — 2026-09-05
 
 First cut of the wall.

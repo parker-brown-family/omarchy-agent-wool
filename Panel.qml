@@ -12,14 +12,14 @@ import qs.Ui
 
 // Wool — the presence surface. The whole flock, on one wall.
 //
-// Herd answers "who needs me right now" from the bar; Wool answers "what does
-// my fleet look like" on a toggled wall of cards. They compose and neither
-// requires the other.
+// Crook answers "who needs me right now" from the bar; Wool answers "what
+// does my fleet look like" on a toggled wall of cards. They compose and
+// neither requires the other; both drink from the Herd bus.
 //
 // This file is a pure display over two state files:
 //
-//   ~/.local/state/crook/state.json        who exists and how they are —
-//                                          written by the crook bus (agents
+//   ~/.local/state/herd/state.json        who exists and how they are —
+//                                          written by the herd bus (agents
 //                                          self-report via hooks; a herdr
 //                                          mirror covers the rest)
 //   ~/.local/state/omarchy/wool/wall.json  vitals enrichment — written by
@@ -27,7 +27,7 @@ import qs.Ui
 //                                          while the wall is open
 //
 // Nothing here writes to any terminal. The one write anywhere in the plugin
-// is `crook seen` after a focus jump, which is what makes "finished and
+// is `herd seen` after a focus jump, which is what makes "finished and
 // unseen" a state that can end.
 Panel {
   id: root
@@ -43,7 +43,7 @@ Panel {
   readonly property string home: Quickshell.env("HOME") || ""
   readonly property string stateBase:
     Quickshell.env("XDG_STATE_HOME") || (home + "/.local/state")
-  readonly property string crookFile: stateBase + "/crook/state.json"
+  readonly property string herdFile: stateBase + "/herd/state.json"
   readonly property string wallFile: stateBase + "/omarchy/wool/wall.json"
   readonly property bool hideWhenEmpty: setting("hideWhenEmpty", true)
   readonly property int scanIntervalMs: Math.max(1000, setting("scanIntervalMs", 2500))
@@ -61,7 +61,7 @@ Panel {
 
   // ------------------------------------------------------------------ model
 
-  // The one-line contract crook's file asks of every reader: past stale_after
+  // The one-line contract herd's file asks of every reader: past stale_after
   // the state is unknown, whatever the field still says.
   function effectiveState(s) {
     if (s.stale_after !== undefined && s.stale_after !== null && nowSecs > s.stale_after)
@@ -172,29 +172,29 @@ Panel {
   // ------------------------------------------------------------------ state
 
   FileView {
-    id: crookView
-    path: root.crookFile
+    id: herdView
+    path: root.herdFile
     watchChanges: true
     printErrors: false
     onFileChanged: reload()
-    onLoaded: root.parseCrook(text())
+    onLoaded: root.parseHerd(text())
     onLoadFailed: {
-      root.lastCrookText = ""
+      root.lastHerdText = ""
       root.sessions = []
     }
   }
 
-  property string lastCrookText: ""
+  property string lastHerdText: ""
 
-  function parseCrook(content) {
+  function parseHerd(content) {
     var raw = String(content || "")
-    if (raw === lastCrookText) return
-    lastCrookText = raw
+    if (raw === lastHerdText) return
+    lastHerdText = raw
     try {
       var doc = JSON.parse(raw)
       sessions = (doc && Array.isArray(doc.sessions)) ? doc.sessions : []
     } catch (e) {
-      console.warn("wool", "ignoring unreadable crook state", e)
+      console.warn("wool", "ignoring unreadable herd state", e)
       sessions = []
     }
   }
@@ -224,10 +224,11 @@ Panel {
   }
 
   // A FileView whose parent directory does not exist when it is created never
-  // sees the file appear (Herd learned this the hard way: watchChanges copes
-  // with an absent file, not an absent directory, and does not retry). Crook
-  // may well not have run yet when the shell loads this panel, so the slow
-  // tick re-reads as well as re-stamping the staleness clock.
+  // sees the file appear (the Crook tray learned this the hard way, back when
+  // it was Herd: watchChanges copes with an absent file, not an absent
+  // directory, and does not retry). The herd bus may well not have run yet
+  // when the shell loads this panel, so the slow tick re-reads as well as
+  // re-stamping the staleness clock.
   Timer {
     interval: 3000
     running: true
@@ -235,7 +236,7 @@ Panel {
     triggeredOnStart: true
     onTriggered: {
       root.nowSecs = Date.now() / 1000
-      crookView.reload()
+      herdView.reload()
     }
   }
 
@@ -280,7 +281,7 @@ Panel {
     tooltipText: root.heroMeta
     onPressed: function (buttonCode) {
       // Right-click goes straight to the first card that wants eyes, without
-      // opening the wall — the Herd gesture, kept consistent.
+      // opening the wall — the Crook gesture, kept consistent.
       if (buttonCode === Qt.RightButton && (root.attentionCount > 0 || root.errorCount > 0))
         root.focusFirstAttention()
       else
@@ -411,7 +412,7 @@ Panel {
                     }
                   }
 
-                  // The last prompt this agent was given — crook carries it,
+                  // The last prompt this agent was given — herd carries it,
                   // so no transcript is read to draw it. Plain text on
                   // purpose: it is other people's (and other agents') input.
                   Text {
@@ -506,7 +507,7 @@ Panel {
           Text {
             width: parent.width
             visible: root.ordered.length === 0
-            text: "Nothing on the wall yet. Claude sessions appear when the crook hooks are installed; `crook sync-herdr` mirrors everything else."
+            text: "Nothing on the wall yet. Claude sessions appear when the herd hooks are installed; `herd sync-herdr` mirrors everything else."
             color: root.dim
             font.family: root.fontFamily
             font.pixelSize: Style.font.caption

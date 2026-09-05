@@ -3,29 +3,29 @@
 #
 #   wool-focus.sh <key>
 #
-# Keys are crook's: a Claude session uuid, or "herdr:<pane_id>" for a mirrored
+# Keys are herd's: a Claude session uuid, or "herdr:<pane_id>" for a mirrored
 # herdr agent. Two focus paths, then one small write:
 #
 #   herdr:*  →  herdr agent focus <pane>, then raise the herdr client's window
 #   uuid     →  climb the agent process's /proc ancestry to the first pid
 #               Hyprland owns, and raise that window
 #
-# then `crook seen <key>`, which is the write that ends "finished-and-unseen".
+# then `herd seen <key>`, which is the write that ends "finished-and-unseen".
 # Every failure path exits 0 and does nothing: a jump that cannot land must
 # not crash a bar.
 #
 # The raise machinery — Lua dispatcher first with legacy fallback, token and
-# address hygiene, the /proc walk — is adapted from omarchy-herd's
-# herd-focus.sh (same author, same licence), where each piece carries a
-# lesson already paid for.
+# address hygiene, the /proc walk — is adapted from the Crook tray's focus
+# script (né omarchy-herd/herd-focus.sh; same author, same licence), where
+# each piece carries a lesson already paid for.
 set -eu
 
 KEY="${1:-}"
-CROOK="${WOOL_CROOK_BIN:-crook}"
+HERD="${WOOL_HERD_BIN:-herd}"
 HERDR="${WOOL_HERDR_BIN:-herdr}"
-STATE="${XDG_STATE_HOME:-$HOME/.local/state}/crook/state.json"
+STATE="${XDG_STATE_HOME:-$HOME/.local/state}/herd/state.json"
 
-# Anything outside this shape did not come from crook, and nothing outside
+# Anything outside this shape did not come from herd, and nothing outside
 # this shape reaches a command line.
 valid_token() {
   case "${1:-}" in
@@ -133,5 +133,5 @@ case "$KEY" in
 esac
 
 # Looking at an agent is what turns "done" into "idle". Best effort; a wall
-# whose crook has vanished still focuses fine.
-command -v "$CROOK" >/dev/null 2>&1 && "$CROOK" seen "$KEY" 2>/dev/null || true
+# whose herd has vanished still focuses fine.
+command -v "$HERD" >/dev/null 2>&1 && "$HERD" seen "$KEY" 2>/dev/null || true

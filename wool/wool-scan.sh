@@ -9,16 +9,16 @@
 #
 #   ${XDG_STATE_HOME:-~/.local/state}/omarchy/wool/wall.json
 #
-#   { "stamp": <epoch>, "vitals": { "<crook key>": {window,fatigue,relevance,
+#   { "stamp": <epoch>, "vitals": { "<herd key>": {window,fatigue,relevance,
 #                                    call,tokens,limit,model,effort,...} } }
 #
 # A session with no measurable vitals is ABSENT from the map — never zeroed.
 # The panel renders absence as absence.
 set -eu
 
-CROOK="${WOOL_CROOK_BIN:-crook}"
+HERD="${WOOL_HERD_BIN:-herd}"
 TD="${WOOL_TD_BIN:-terminal-delight}"
-STATE="${XDG_STATE_HOME:-$HOME/.local/state}/crook/state.json"
+STATE="${XDG_STATE_HOME:-$HOME/.local/state}/herd/state.json"
 OUT_DIR="${XDG_STATE_HOME:-$HOME/.local/state}/omarchy/wool"
 OUT="$OUT_DIR/wall.json"
 LOCK="$OUT_DIR/.lock"
@@ -38,13 +38,13 @@ if command -v flock >/dev/null 2>&1; then
 fi
 
 # Refresh the herdr mirror first, so the wall the reader is looking at shows
-# herdr's agents at wall-tick freshness. Absent crook, absent herdr: fine —
+# herdr's agents at wall-tick freshness. Absent herd, absent herdr: fine —
 # the mirror just does not move.
-command -v "$CROOK" >/dev/null 2>&1 && "$CROOK" sync-herdr 2>/dev/null || true
+command -v "$HERD" >/dev/null 2>&1 && "$HERD" sync-herdr 2>/dev/null || true
 
 VITALS='[]'
 if [ -f "$STATE" ] && command -v "$TD" >/dev/null 2>&1; then
-  # Transcript paths come from crook's file. They are filesystem paths written
+  # Transcript paths come from herd's file. They are filesystem paths written
   # by our own hooks, but they still get an existence check before reaching a
   # command line, and they are passed as argv entries, never re-parsed.
   set --
@@ -59,7 +59,7 @@ EOF
   fi
 fi
 
-# The vitals CLI keys its rows by session uuid, which IS the crook key for
+# The vitals CLI keys its rows by session uuid, which IS the herd key for
 # self-reported entries. herdr-mirrored entries carry no transcript and are
 # simply not in the map.
 printf '%s' "$VITALS" | jq -c --argjson stamp "$(date +%s)" '

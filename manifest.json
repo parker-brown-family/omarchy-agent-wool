@@ -2,10 +2,10 @@
   "schemaVersion": 1,
   "id": "brownfamilysports.wool",
   "name": "Wool",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "author": "Parker Brown",
   "license": "MIT",
-  "description": "The whole flock on one wall — every coding agent's face, state and vitals, fed by the crook state bus",
+  "description": "The whole flock on one wall — every coding agent's face, state and vitals, fed by the herd state bus",
   "kinds": ["bar-widget"],
   "entryPoints": {
     "barWidget": "Panel.qml"

@@ -1,7 +1,7 @@
 #!/bin/sh
 # Wool's test suite. POSIX sh, no framework, one dependency (jq) the plugin
 # itself already needs. Everything runs against stubs in tests/stubs, so no
-# crook, no herdr, no Hyprland and no desktop session are required — the
+# herd, no herdr, no Hyprland and no desktop session are required — the
 # parts that need those are the parts a test cannot honestly cover.
 set -u
 
@@ -29,7 +29,7 @@ check_contains() {
 
 section() { printf '\n%s\n' "$1"; }
 
-# A fresh state directory per test, and a fixture crook file with three
+# A fresh state directory per test, and a fixture herd file with three
 # entries: two self-reported claude sessions with transcripts, one mirrored
 # herdr codex with none.
 sandbox() {
@@ -38,17 +38,17 @@ sandbox() {
   HOME="$SANDBOX/home"
   XDG_STATE_HOME="$SANDBOX/state"
   WOOL_STUB_LOG="$SANDBOX/stub.log"
-  WOOL_CROOK_BIN="$STUBS/crook"
+  WOOL_HERD_BIN="$STUBS/herd"
   WOOL_TD_BIN="$STUBS/terminal-delight"
   WOOL_HERDR_BIN="$STUBS/herdr"
-  export HOME XDG_STATE_HOME WOOL_STUB_LOG WOOL_CROOK_BIN WOOL_TD_BIN WOOL_HERDR_BIN
+  export HOME XDG_STATE_HOME WOOL_STUB_LOG WOOL_HERD_BIN WOOL_TD_BIN WOOL_HERDR_BIN
   unset WOOL_STUB_TD_MODE WOOL_STUB_WINPID WOOL_STUB_HYPR 2>/dev/null || true
-  mkdir -p "$HOME" "$XDG_STATE_HOME/crook"
+  mkdir -p "$HOME" "$XDG_STATE_HOME/herd"
   : >"$SANDBOX/aaaa-1111.jsonl"
   : >"$SANDBOX/bbbb-2222.jsonl"
-  cat >"$XDG_STATE_HOME/crook/state.json" <<EOF
+  cat >"$XDG_STATE_HOME/herd/state.json" <<EOF
 {
-  "crook": { "version": "0.1.0", "engine": 1 },
+  "herd": { "version": "0.1.0", "engine": 1 },
   "updated_at": 1000,
   "sessions": [
     { "key": "aaaa-1111", "agent": "claude-code", "state": "working", "source": "self",
@@ -90,8 +90,8 @@ check 'every transcript-bearing session is measured' '2' \
 check 'a mirrored agent with no transcript is absent, not zeroed' 'null' \
   "$(jq -c '.vitals["herdr:w1:p2"]' "$WALL_JSON")"
 check 'the snapshot is stamped' 'number' "$(jq -r '.stamp | type' "$WALL_JSON")"
-check 'the herdr mirror is refreshed first' 'crook sync-herdr' \
-  "$(grep '^crook' "$WOOL_STUB_LOG" | head -1)"
+check 'the herdr mirror is refreshed first' 'herd sync-herdr' \
+  "$(grep '^herd' "$WOOL_STUB_LOG" | head -1)"
 check 'no temporary file is left behind' '0' \
   "$(find "$XDG_STATE_HOME/omarchy/wool" -name 'wall.json.tmp*' | wc -l | tr -d ' ')"
 
@@ -106,14 +106,14 @@ check 'garbage vitals output degrades to an empty map' '0' \
   "$(jq '.vitals | length' "$WALL_JSON")"
 
 sandbox
-WOOL_CROOK_BIN=/nonexistent/crook scan
-check 'a missing crook still publishes the wall' '2' \
+WOOL_HERD_BIN=/nonexistent/herd scan
+check 'a missing herd still publishes the wall' '2' \
   "$(jq '.vitals | length' "$WALL_JSON")"
 
 sandbox
-rm "$XDG_STATE_HOME/crook/state.json"
+rm "$XDG_STATE_HOME/herd/state.json"
 scan
-check 'no crook state at all publishes an empty wall, not a crash' '0' \
+check 'no herd state at all publishes an empty wall, not a crash' '0' \
   "$(jq '.vitals | length' "$WALL_JSON")"
 
 # -------------------------------------------------------------- wool-focus
@@ -123,7 +123,7 @@ section 'wool-focus.sh'
 sandbox
 focus 'herdr:w1:p2'
 check_contains 'a mirrored key goes through herdr' 'herdr agent focus w1:p2' "$(stub_log)"
-check_contains 'and the look is recorded' 'crook seen herdr:w1:p2' "$(stub_log)"
+check_contains 'and the look is recorded' 'herd seen herdr:w1:p2' "$(stub_log)"
 
 sandbox
 WOOL_STUB_WINPID=$$
@@ -156,10 +156,10 @@ focus '$(whoami)'
 check 'and so is a substitution attempt' '' "$(stub_log)"
 
 sandbox
-WOOL_CROOK_BIN=/nonexistent/crook
-export WOOL_CROOK_BIN
+WOOL_HERD_BIN=/nonexistent/herd
+export WOOL_HERD_BIN
 focus 'herdr:w1:p2'
-check_contains 'focus works without crook (seen is best-effort)' 'herdr agent focus w1:p2' "$(stub_log)"
+check_contains 'focus works without herd (seen is best-effort)' 'herdr agent focus w1:p2' "$(stub_log)"
 
 # ------------------------------------------------------------------- shape
 
