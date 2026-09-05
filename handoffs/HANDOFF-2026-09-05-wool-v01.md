@@ -17,8 +17,9 @@ If a card is missing: that session predates the hooks and appears on its next
 event. Right-click the bar icon jumps to the first agent that wants eyes.
 
 The plugin is a symlink: `~/.config/omarchy/plugins/brownfamilysports.wool`
-→ `~/Work/omarchy-agent-wool` (dev-link pattern; replace with a clone via
-`omarchy plugin add` once the repo has a GitHub remote).
+→ `~/Work/omarchy-agent-wool` (dev-link pattern; the repo is public at
+github.com/parker-brown-family/omarchy-agent-wool, so `omarchy plugin add`
+works as the non-dev install).
 
 ## What it is
 
@@ -58,5 +59,6 @@ status live in `omarchy-agent-wool-plan.html` (the TPS report, annotated).
 - shellcheck's mise shim is broken machine-wide (`mise use -g
   shellcheck@0.11.0` would fix); scripts mirror herd-focus.sh's
   shellcheck-clean patterns but were not machine-checked.
-- No GitHub remote yet, so no follow-up issues could be filed here; they are
-  listed in the plan and this handoff instead.
+- The repo went public later the same day (remote on the github-bfs alias);
+  open threads still live in the plan and this handoff — file them as
+  `follow-up` issues here as they firm up.
