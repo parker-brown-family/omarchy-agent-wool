@@ -256,13 +256,11 @@ Panel {
     onTriggered: if (!scanProc.running) scanProc.running = true
   }
 
-  IpcHandler {
-    target: "brownfamilysports.wool"
-
-    function open(): void { root.open() }
-    function close(): void { root.close() }
-    function toggle(): void { root.toggle() }
-  }
+  // The Panel base already registers an IpcHandler for ipcTarget with
+  // open/close/show/hide/toggle — verified live: `qs -p /usr/share/omarchy/shell
+  // ipc call brownfamilysports.wool toggle` opens the wall with no handler
+  // declared here, and a duplicate declaration only earns a "will not be used"
+  // warning in the shell log.
 
   // ------------------------------------------------------------- bar button
 
