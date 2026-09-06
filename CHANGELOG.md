@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+- The widget is **Agent Wool** on the bar and at the top of the wall, and its
+  icon is the sheep. Both moved here from the tray next door: Crook wore the
+  sheep only because Nerd Fonts carries no shepherd's crook, and now that Crook
+  draws its own, the flock belongs on the surface that draws the flock. The
+  grid glyph it replaces described the layout rather than the subject.
+- `qs ipc call brownfamilysports.wool toggle` works again. The widget set
+  `manageIpc: false` while declaring no handler of its own, which unregistered
+  the target the README tells you to bind a key to — the panel drew fine, so
+  nothing looked broken until you tried the documented command and got
+  `Target not found`. The base class manages the target again.
 - The README carries the footprint disclosure an unsandboxed plugin owes its
   reader: every program Wool runs as an argv line, what it reads (the bus, its
   own wall file, `/proc/<pid>/stat` — not your transcripts, whose paths it

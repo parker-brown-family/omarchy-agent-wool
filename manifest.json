@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "id": "brownfamilysports.wool",
-  "name": "Wool",
+  "name": "Agent Wool",
   "version": "0.2.0",
   "author": "Parker Brown",
   "license": "MIT",
@@ -11,7 +11,7 @@
     "barWidget": "Panel.qml"
   },
   "barWidget": {
-    "displayName": "Wool",
+    "displayName": "Agent Wool",
     "description": "One bar icon and one wall: every agent on the machine as a card — a face whose colour says how it's doing, the last prompt it saw, its context vitals — and a click that takes you to its window. Herd is attention; Wool is presence.",
     "category": "AI",
     "allowMultiple": false,

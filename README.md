@@ -1,11 +1,11 @@
-# Wool
+# Agent Wool
 
 **The whole flock on one wall.** An Omarchy bar plugin that shows every coding
 agent on the machine as a card — a face whose colour says how it's doing, the
 last prompt it was given, and its context vitals — with a click that takes you
 to that agent's window.
 
-![The wall: eight live agents, attention first](docs/wall.png)
+![The wall: twelve live agents, the three that want your eyes first](docs/wall.png)
 
 Wool is the presence third of the shepherd family:
 
@@ -14,7 +14,7 @@ Wool is the presence third of the shepherd family:
 - **[Crook](https://github.com/parker-brown-family/omarchy-crook)** is
   *attention* — the shepherd's hook that singles out the one agent that needs
   you, from the bar.
-- **Wool** is *presence* — the whole flock's coat, on a toggled wall.
+- **Agent Wool** is *presence* — the whole flock's coat, on a toggled wall.
 
 They compose. None requires the others.
 

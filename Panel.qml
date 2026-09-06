@@ -33,7 +33,6 @@ Panel {
   id: root
   moduleName: "brownfamilysports.wool"
   ipcTarget: "brownfamilysports.wool"
-  manageIpc: false
 
   readonly property color foreground: bar ? bar.foreground : Color.foreground
   readonly property color urgent: bar ? bar.urgent : Color.urgent
@@ -261,11 +260,11 @@ Panel {
     onTriggered: if (!scanProc.running) scanProc.running = true
   }
 
-  // The Panel base already registers an IpcHandler for ipcTarget with
-  // open/close/show/hide/toggle — verified live: `qs -p /usr/share/omarchy/shell
-  // ipc call brownfamilysports.wool toggle` opens the wall with no handler
-  // declared here, and a duplicate declaration only earns a "will not be used"
-  // warning in the shell log.
+  // No IpcHandler here on purpose: the Panel base registers one for
+  // ipcTarget with open/close/show/hide/toggle. It does that only while
+  // `manageIpc` is true, which is the default — setting it false while
+  // declaring no handler of our own is what silently unregistered the target
+  // and broke the toggle the README documents.
 
   // ------------------------------------------------------------- bar button
 
@@ -273,10 +272,13 @@ Panel {
     id: button
     anchors.fill: parent
     bar: root.bar
-    // nf-md-view_grid (U+F0570): a wall of cards. Verified present in the
-    // bar's JetBrainsMono Nerd Font — the whole f0001-f1af0 Material block
-    // ships in it. An absent glyph would leave a blank slot with no error.
-    text: "󰕰"
+    // md-sheep (U+F0CC6): the flock, which is what this wall is. It stood on
+    // the Crook tray first, as a substitute for a crook glyph Nerd Fonts does
+    // not carry; Crook draws its own crook now, and the sheep came here, where
+    // it was never a substitute for anything. Verified present in the bar's
+    // JetBrainsMono Nerd Font — the whole f0001-f1af0 Material block ships in
+    // it. An absent glyph would leave a blank slot with no error anywhere.
+    text: "󰳆"
     active: root.attentionCount > 0 || root.errorCount > 0
     tooltipText: root.heroMeta
     onPressed: function (buttonCode) {
@@ -326,7 +328,7 @@ Panel {
 
           PanelHero {
             width: parent.width
-            title: "Wool"
+            title: "Agent Wool"
             meta: root.heroMeta
             foreground: root.foreground
             fontFamily: root.fontFamily
