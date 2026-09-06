@@ -79,6 +79,53 @@ qs ipc call brownfamilysports.wool toggle
   re-syncs herdr and re-reads vitals. Nothing at all is scanned while the
   wall is closed.
 
+## What this plugin runs, reads, and sends
+
+Plugins are unsandboxed, so here is the whole footprint. Wool's is the largest
+in the family — it is the one that execs another tool to measure things — which
+is the reason to write it down rather than the reason not to.
+
+<!-- footprint:begin -->
+```
+sh wool/wool-scan.sh                          panel timer, only while the wall is open
+sh wool/wool-focus.sh <key>                   a card click
+herd sync-herdr                               scan: mirror in the agents herdr knows
+herd seen <key>                               focus: the one write — clears done-and-unseen
+terminal-delight agent-vitals <transcript…>   scan: vitals, only if it is installed
+herdr agent focus <pane>                      focus: jump to a mirrored agent's pane
+hyprctl clients -j                            focus: map a pid to a window address
+hyprctl dispatch <focus>                      focus: raise that window
+pgrep -x herdr                                focus: find herdr's own client
+jq                                            both: parse json
+```
+<!-- footprint:end -->
+
+**Every one of those is an argv entry, never a shell string.** Transcript paths
+reach `agent-vitals` as separate arguments after an existence check; the key
+behind a card click is refused outright unless it matches
+`[A-Za-z0-9:._-]+`, and it is checked again after the `herdr:` prefix is
+stripped. Nothing else is interpolated into a command.
+
+- **Reads:** `~/.local/state/herd/state.json` (the bus), the wall file Wool
+  itself wrote, and `/proc/<pid>/stat` while climbing from an agent to the
+  window that hosts it. It does **not** read your transcripts — it passes their
+  paths, which the bus already carries, to `terminal-delight agent-vitals`,
+  which reads them and returns numbers.
+- **Writes:** one file,
+  `~/.local/state/omarchy/wool/wall.json`, replaced by atomic rename, plus its
+  lock beside it. Clicking a card also calls `herd seen`, which writes the
+  bus's own state file — the only thing Wool changes outside its directory.
+- **Network:** none, ever. No script here names a network tool, and a test
+  says so, so it stays that way.
+- **Nothing runs while the wall is closed.** The scan is driven by the panel's
+  timer, and the panel does not tick when it is not open. That is the design,
+  not an optimisation: an ungated version of this sweep once read 3.5MB/s of
+  disk with nothing on screen.
+
+The block above is checked by the test suite, so it cannot quietly drift from
+the code: every program the stubs intercept must be named in it, and every
+program it names must appear in a script.
+
 ## What Wool deliberately is not
 
 Terminal Delight's in-terminal Agent Wall binds *panes*: live buffer

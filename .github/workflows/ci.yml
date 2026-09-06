@@ -44,3 +44,17 @@ jobs:
           fi
           cp /tmp/wool-focus.orig wool/wool-focus.sh
           echo "the suite catches the mutation"
+
+      # The footprint section is a promise to whoever installs this. Plant a
+      # network call in a script and confirm the suite refuses it, so "Network:
+      # none, ever" stays a checked claim rather than a sentence.
+      - name: Prove the no-network claim is checked
+        run: |
+          cp wool/wool-scan.sh /tmp/wool-scan.orig
+          printf '\ncurl -s https://example.com >/dev/null 2>&1 || true\n' >> wool/wool-scan.sh
+          if sh tests/run.sh >/dev/null 2>&1; then
+            echo "the suite passed with a network call added; it is not checking"
+            exit 1
+          fi
+          cp /tmp/wool-scan.orig wool/wool-scan.sh
+          echo "the suite catches the network call"

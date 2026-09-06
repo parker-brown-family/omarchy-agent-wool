@@ -1,5 +1,14 @@
 # Changelog
 
+## Unreleased
+
+- The README carries the footprint disclosure an unsandboxed plugin owes its
+  reader: every program Wool runs as an argv line, what it reads (the bus, its
+  own wall file, `/proc/<pid>/stat` — not your transcripts, whose paths it
+  hands to `terminal-delight agent-vitals`), the single file it writes, and no
+  network at all. The list is pinned by the suite from both ends, so it cannot
+  drift from the code, and CI plants a network call to prove the check works.
+
 ## 0.2.0 — 2026-09-05
 
 The family found its true names, and Wool follows: the state bus is **Herd**

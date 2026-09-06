@@ -177,6 +177,52 @@ for f in Panel.qml FleeceFace.qml wool/wool-scan.sh wool/wool-focus.sh README.md
   if [ -f "$ROOT/$f" ]; then pass "$f exists"; else fail "$f exists" "missing"; fi
 done
 
+# --------------------------------------------------------------- footprint
+
+# The README claims a complete list of what this plugin runs. A claim nobody
+# checks is a claim that rots, and this one is the reason a reviewer trusts an
+# unsandboxed plugin — so it is pinned from both ends: nothing runs that the
+# README does not name, and nothing is named that no longer runs.
+
+section 'the README footprint block'
+
+FOOTPRINT=$(awk '/footprint:begin/,/footprint:end/' "$ROOT/README.md" \
+  | grep -v 'footprint:\|```' | awk 'NF { print $1 }' | sort -u)
+
+# Every program the tests have to stub is a program this plugin runs. If a new
+# exec appears, the suite needs a stub for it, and the README must name it.
+for stub in "$STUBS"/*; do
+  name=${stub##*/}
+  case "$FOOTPRINT" in
+    *"$name"*) pass "names $name, which the tests stub" ;;
+    *) fail "names $name, which the tests stub" "not in the footprint block" ;;
+  esac
+done
+
+# And the reverse: a program named in the README but gone from the code is a
+# disclosure of something that no longer happens, which is its own kind of
+# wrong.
+for prog in $FOOTPRINT; do
+  if grep -qw -- "$prog" "$ROOT/Panel.qml" "$ROOT/wool/wool-scan.sh" "$ROOT/wool/wool-focus.sh"; then
+    pass "$prog is actually run"
+  else
+    fail "$prog is actually run" "named in the README, absent from the code"
+  fi
+done
+
+# "Network: none, ever" is the one footprint claim a reader cannot verify by
+# watching the wall, so it is the one most worth a test.
+NET=$(grep -nE '\b(curl|wget|nc|ncat|socat|ssh|scp|openssl|telnet)\b' \
+  "$ROOT/wool/wool-scan.sh" "$ROOT/wool/wool-focus.sh" || true)
+check 'no script reaches the network' '' "$NET"
+
+# The two paths the README names as the read and the write, named in the code.
+check 'the bus file the README names is the file the scripts read' '2' \
+  "$(grep -lc 'state/}\?herd/state.json\|herd/state.json' \
+     "$ROOT/wool/wool-scan.sh" "$ROOT/wool/wool-focus.sh" | wc -l | tr -d ' ')"
+check_contains 'the wall file the README names is the file the scan writes' \
+  'omarchy/wool' "$(cat "$ROOT/wool/wool-scan.sh")"
+
 # ----------------------------------------------------------------- summary
 
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
