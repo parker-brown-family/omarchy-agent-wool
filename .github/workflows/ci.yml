@@ -18,11 +18,11 @@ jobs:
       # they will run under. Check them as sh so a bashism cannot pass here and
       # fail on a dash-based /bin/sh.
       - name: Lint the shell
-        run: shellcheck -s sh wool/wool-scan.sh wool/wool-focus.sh tests/run.sh tests/stubs/*
+        run: shellcheck -s sh wool/wool-scan.sh wool/wool-focus.sh wool/wool-herdr-sync.sh tests/run.sh tests/stubs/*
 
       - name: Syntax-check as POSIX sh
         run: |
-          for f in wool/wool-scan.sh wool/wool-focus.sh tests/run.sh tests/stubs/*; do
+          for f in wool/wool-scan.sh wool/wool-focus.sh wool/wool-herdr-sync.sh tests/run.sh tests/stubs/*; do
             sh -n "$f"
           done
 

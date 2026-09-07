@@ -1,0 +1,32 @@
+id = "brownfamilysports.wool"
+name = "Agent Wool"
+version = "0.2.0"
+# 0.7.5, not 0.7.0: plugin v1 landed in 0.7.0, but the [[startup]] hook that
+# mirrors the flock the moment a server takes over arrived in 0.7.5. Below that
+# the manifest links and herdr's agents reach the wall only when one of them
+# happens to change state.
+min_herdr_version = "0.7.5"
+description = "Mirror herdr's agents into the Herd bus, so the wall shows them without being open"
+platforms = ["linux"]
+
+# A fresh mirror whenever a server takes over — a restart, or a live handoff
+# during `herdr update` — so the wall's first draw after a restart is true
+# rather than whatever the last server left on the bus.
+[[startup]]
+command = ["sh", "wool-herdr-sync.sh"]
+
+[[events]]
+on = "pane.agent_status_changed"
+command = ["sh", "wool-herdr-sync.sh"]
+
+[[events]]
+on = "pane.agent_detected"
+command = ["sh", "wool-herdr-sync.sh"]
+
+[[events]]
+on = "pane.exited"
+command = ["sh", "wool-herdr-sync.sh"]
+
+[[events]]
+on = "pane.closed"
+command = ["sh", "wool-herdr-sync.sh"]
