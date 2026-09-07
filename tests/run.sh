@@ -177,6 +177,26 @@ for f in Panel.qml FleeceFace.qml wool/wool-scan.sh wool/wool-focus.sh README.md
   if [ -f "$ROOT/$f" ]; then pass "$f exists"; else fail "$f exists" "missing"; fi
 done
 
+# ---------------------------------------------------------- rendering safety
+
+# The security review's finding: bus titles and prompts are other people's
+# input, and a QML Text without textFormat sniffs markup out of them. These
+# pins hold the fix: every untrusted sink stays PlainText, the click path
+# stays argv, and both parse boundaries stay present.
+
+section 'rendering safety'
+
+check 'every untrusted Text sink pins PlainText' '5' \
+  "$(grep -c '^ *textFormat: Text.PlainText$' "$ROOT/Panel.qml")"
+check 'the click path is argv, never a quoted shell string' '0' \
+  "$(grep -c 'bar\.run("sh' "$ROOT/Panel.qml")"
+check 'and execArgv is what carries it' '1' \
+  "$(grep -c 'Util\.execArgv(\["sh"' "$ROOT/Panel.qml")"
+check 'the herd boundary clamps every session field' '1' \
+  "$(grep -c 'function cleanSession' "$ROOT/Panel.qml")"
+check 'the wall boundary clamps every vitals field' '1' \
+  "$(grep -c 'function cleanVitals' "$ROOT/Panel.qml")"
+
 # --------------------------------------------------------------- footprint
 
 # The README claims a complete list of what this plugin runs. A claim nobody

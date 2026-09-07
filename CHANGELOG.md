@@ -2,6 +2,17 @@
 
 ## Unreleased
 
+- The wall renders the bus's strings as text, never as markup. The security
+  review found that project names, agent/model labels, prompts and the vitals
+  CLI's call field reached QML `Text` elements without `textFormat:
+  Text.PlainText`. All five sinks now pin it; every string is clamped (control
+  characters stripped, length ceilings) at the two parse boundaries; numbers
+  pass through `toNum` so an absent measurement stays absent instead of
+  becoming a zero; and the click-through runs as an argv vector instead of a
+  quoted shell string. Five checks hold it in place. Verified live with the
+  reviewer's own strings — `<font color='green'>fake</font>` and an `<img>`
+  tag render as literal text on the wall.
+
 - The widget is **Agent Wool** on the bar and at the top of the wall, and its
   icon is the sheep. Both moved here from the tray next door: Crook wore the
   sheep only because Nerd Fonts carries no shepherd's crook, and now that Crook

@@ -148,7 +148,10 @@ Panel {
 
   function focusAgent(key) {
     if (!root.bar || !safeToken(key)) return
-    root.bar.run("sh '" + pluginDir + "/wool/wool-focus.sh' '" + key + "'")
+    // Argv, not a quoted shell string: safeToken already refuses a quote, but
+    // the argv form makes injection structurally impossible instead of one
+    // regex away — Util.qml says to prefer it for anything built from input.
+    Util.execArgv(["sh", pluginDir + "/wool/wool-focus.sh", key])
     root.close()
   }
 
@@ -185,13 +188,57 @@ Panel {
 
   property string lastHerdText: ""
 
+  // The one boundary, for both files this panel reads. Herd's sessions carry
+  // other people's cwd, titles and prompts; the wall file carries whatever the
+  // vitals CLI emitted. Nothing from either reaches a binding without control
+  // characters stripped and a length ceiling, numbers arrive through toNum so
+  // an absent measurement stays absent rather than becoming a zero, and every
+  // sink below pins textFormat: Text.PlainText because AutoText sniffs markup
+  // and a title is exactly where markup would arrive.
+  function cleanStr(value, max) {
+    var s = String(value === undefined || value === null ? "" : value)
+    s = s.replace(/[\u0000-\u001f\u007f-\u009f\u2028\u2029]/g, " ")
+    return s.length > max ? s.slice(0, max) : s
+  }
+
+  function toNum(value) {
+    if (value === undefined || value === null) return undefined
+    var n = Number(value)
+    return isFinite(n) ? n : undefined
+  }
+
+  function cleanSession(x) {
+    return {
+      key: cleanStr(x && x.key, 80),
+      agent: cleanStr(x && x.agent, 48),
+      state: cleanStr(x && x.state, 24),
+      source: cleanStr(x && x.source, 24),
+      cwd: cleanStr(x && x.cwd, 240),
+      title: cleanStr(x && x.title, 240),
+      updated_at: toNum(x && x.updated_at),
+      stale_after: toNum(x && x.stale_after)
+    }
+  }
+
+  function cleanVitals(v) {
+    return {
+      window: toNum(v && v.window),
+      fatigue: toNum(v && v.fatigue),
+      relevance: toNum(v && v.relevance),
+      call: v && v.call === undefined ? undefined : cleanStr(v && v.call, 24),
+      model: cleanStr(v && v.model, 48),
+      effort: cleanStr(v && v.effort, 24)
+    }
+  }
+
   function parseHerd(content) {
     var raw = String(content || "")
     if (raw === lastHerdText) return
     lastHerdText = raw
     try {
       var doc = JSON.parse(raw)
-      sessions = (doc && Array.isArray(doc.sessions)) ? doc.sessions : []
+      var list = (doc && Array.isArray(doc.sessions)) ? doc.sessions : []
+      sessions = list.map(cleanSession)
     } catch (e) {
       console.warn("wool", "ignoring unreadable herd state", e)
       sessions = []
@@ -216,7 +263,12 @@ Panel {
     lastWallText = raw
     try {
       var doc = JSON.parse(raw)
-      vitals = (doc && doc.vitals && typeof doc.vitals === "object") ? doc.vitals : ({})
+      var vraw = (doc && doc.vitals && typeof doc.vitals === "object") ? doc.vitals : ({})
+      var out = ({})
+      for (var k in vraw) {
+        if (vraw.hasOwnProperty(k)) out[cleanStr(k, 80)] = cleanVitals(vraw[k])
+      }
+      vitals = out
     } catch (e) {
       vitals = ({})
     }
@@ -385,6 +437,7 @@ Panel {
 
                       Text {
                         width: parent.width
+                        textFormat: Text.PlainText
                         text: root.projectOf(card.modelData) || card.modelData.agent
                         color: root.foreground
                         font.family: root.fontFamily
@@ -394,6 +447,7 @@ Panel {
                       }
                       Text {
                         width: parent.width
+                        textFormat: Text.PlainText
                         text: card.modelData.agent
                               + (card.v && card.v.model ? "  ·  " + card.v.model
                                   + (card.v.effort ? " · " + card.v.effort : "") : "")
@@ -404,6 +458,7 @@ Panel {
                       }
                       Text {
                         width: parent.width
+                        textFormat: Text.PlainText
                         text: root.labelFor(card.est)
                         color: card.tier === "good" ? root.dim
                           : card.tier === "error" ? root.urgent : root.foreground
@@ -419,6 +474,7 @@ Panel {
                   // purpose: it is other people's (and other agents') input.
                   Text {
                     width: parent.width
+                    textFormat: Text.PlainText
                     text: card.modelData.title || ""
                     visible: text !== ""
                     color: root.foreground
@@ -478,6 +534,7 @@ Panel {
                     Text {
                       width: parent.width
                       visible: card.v && card.v.call !== undefined && card.v.call !== "RUN"
+                      textFormat: Text.PlainText
                       text: card.v ? String(card.v.call) : ""
                       color: root.urgent
                       font.family: root.fontFamily
