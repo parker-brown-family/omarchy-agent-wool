@@ -196,21 +196,27 @@ check 'the herdr floor accounts for [[startup]]' '0.7.5' "$(toml min_herdr_versi
 
 # herdr disables a plugin whose hooks keep failing, so every command the
 # manifest names has to be here and runnable.
-for cmd in $(sed -n 's/^command *= *\["sh", *"\([^"]*\)"\].*/\1/p' "$HT" | sort -u); do
+while IFS= read -r cmd; do
+  [ -n "$cmd" ] || continue
   check "the manifest's $cmd exists" '1' \
     "$([ -f "$ROOT/wool/$cmd" ] && echo 1 || echo 0)"
   check "and $cmd is executable" '1' \
     "$([ -x "$ROOT/wool/$cmd" ] && echo 1 || echo 0)"
-done
+done <<EOF
+$(sed -n 's/^command *= *\["sh", *"\([^"]*\)"\].*/\1/p' "$HT" | sort -u)
+EOF
 
 # Every event this subscribes to is one herdr actually delivers to plugins.
-for ev in $(sed -n 's/^on *= *"\([^"]*\)".*/\1/p' "$HT" | sort -u); do
+while IFS= read -r ev; do
+  [ -n "$ev" ] || continue
   case "$ev" in
     pane.agent_status_changed|pane.agent_detected|pane.exited|pane.closed)
       pass "$ev is an event herdr delivers" ;;
     *) fail "$ev is an event herdr delivers" "herdr does not send $ev" ;;
   esac
-done
+done <<EOF
+$(sed -n 's/^on *= *"\([^"]*\)".*/\1/p' "$HT" | sort -u)
+EOF
 
 sandbox
 herdr_sync
