@@ -65,6 +65,7 @@ EOF
 }
 
 scan() { sh "$ROOT/wool/wool-scan.sh"; }
+herdr_sync() { sh "$ROOT/wool/wool-herdr-sync.sh"; }
 focus() { sh "$ROOT/wool/wool-focus.sh" "$@"; }
 stub_log() { [ -f "$WOOL_STUB_LOG" ] && cat "$WOOL_STUB_LOG" || printf ''; }
 
@@ -173,9 +174,62 @@ check_contains 'focus works without herd (seen is best-effort)' 'herdr agent foc
 
 section 'repository shape'
 
-for f in Panel.qml FleeceFace.qml wool/wool-scan.sh wool/wool-focus.sh README.md LICENSE; do
+for f in Panel.qml FleeceFace.qml wool/wool-scan.sh wool/wool-focus.sh \
+         wool/wool-herdr-sync.sh wool/herdr-plugin.toml README.md LICENSE; do
   if [ -f "$ROOT/$f" ]; then pass "$f exists"; else fail "$f exists" "missing"; fi
 done
+
+# -------------------------------------------------------------- herdr half
+
+# The herdr half exists so the mirror does not depend on someone looking at the
+# wall. It is one verb, so what is worth pinning is the manifest agreeing with
+# the Omarchy half and the hook surviving a machine with no herd on it.
+
+section 'the herdr half'
+
+HT="$ROOT/wool/herdr-plugin.toml"
+toml() { sed -n "s/^$1 *= *\"\([^\"]*\)\".*/\1/p" "$HT" | head -1; }
+
+check 'both halves carry the same id' "$(jq -r .id "$ROOT/manifest.json")" "$(toml id)"
+check 'both halves carry the same version' "$(jq -r .version "$ROOT/manifest.json")" "$(toml version)"
+check 'the herdr floor accounts for [[startup]]' '0.7.5' "$(toml min_herdr_version)"
+
+# herdr disables a plugin whose hooks keep failing, so every command the
+# manifest names has to be here and runnable.
+while IFS= read -r cmd; do
+  [ -n "$cmd" ] || continue
+  check "the manifest's $cmd exists" '1' \
+    "$([ -f "$ROOT/wool/$cmd" ] && echo 1 || echo 0)"
+  check "and $cmd is executable" '1' \
+    "$([ -x "$ROOT/wool/$cmd" ] && echo 1 || echo 0)"
+done <<EOF
+$(sed -n 's/^command *= *\["sh", *"\([^"]*\)"\].*/\1/p' "$HT" | sort -u)
+EOF
+
+# Every event this subscribes to is one herdr actually delivers to plugins.
+while IFS= read -r ev; do
+  [ -n "$ev" ] || continue
+  case "$ev" in
+    pane.agent_status_changed|pane.agent_detected|pane.exited|pane.closed)
+      pass "$ev is an event herdr delivers" ;;
+    *) fail "$ev is an event herdr delivers" "herdr does not send $ev" ;;
+  esac
+done <<EOF
+$(sed -n 's/^on *= *"\([^"]*\)".*/\1/p' "$HT" | sort -u)
+EOF
+
+sandbox
+herdr_sync
+check 'the hook mirrors herdr into the bus' 'herd sync-herdr' "$(stub_log)"
+
+# A machine with no herd is not an error state — it is a machine where the bus
+# is not installed. A hook that exits non-zero there gets the plugin disabled
+# by herdr, which would take the working half down with the missing one.
+sandbox
+WOOL_HERD_BIN=/nonexistent/herd
+export WOOL_HERD_BIN
+herdr_sync
+check 'and a missing herd is silent, not fatal' '' "$(stub_log)"
 
 # --------------------------------------------------------------- footprint
 

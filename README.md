@@ -27,7 +27,9 @@ agent-state bus, which publishes one file at
 
 - **Agents feed the herd.** Claude Code sessions self-report through hooks
   (`herd hook`); anything can `herd report`; `herd sync-herdr` mirrors in
-  the agents that cannot speak for themselves.
+  the agents that cannot speak for themselves. Wool ships a herdr plugin that
+  runs that mirror on herdr's own events, so the flock is current before you
+  open the wall rather than because you did.
 - **Displays drink from it.** Wool, Crook, a tmux status line, a script
   blocking on `herd watch` — one writer, many readers.
 - **Looking back is the one write.** Clicking a card focuses the agent's
@@ -62,7 +64,13 @@ authored in agent-playhouse and will replace it through the publish pipeline.
 omarchy plugin add https://github.com/parker-brown-family/omarchy-agent-wool
 ```
 
-Then add the **Wool** widget to your bar. For Claude sessions to appear, the
+Then add the **Agent Wool** widget to your bar. For herdr's agents to stay
+current while the wall is closed, install the herdr half too:
+
+```bash
+herdr plugin install parker-brown-family/omarchy-agent-wool/wool
+```
+ For Claude sessions to appear, the
 herd hooks must be installed (`cargo install herd-bus`, then `herd hooks` —
 see the Herd repository); herdr agents appear whenever herdr is running.
 
@@ -89,6 +97,7 @@ is the reason to write it down rather than the reason not to.
 ```
 sh wool/wool-scan.sh                          panel timer, only while the wall is open
 sh wool/wool-focus.sh <key>                   a card click
+sh wool/wool-herdr-sync.sh                    a herdr agent event, if the herdr half is installed
 herd sync-herdr                               scan: mirror in the agents herdr knows
 herd seen <key>                               focus: the one write — clears done-and-unseen
 terminal-delight agent-vitals <transcript…>   scan: vitals, only if it is installed
@@ -117,7 +126,12 @@ stripped. Nothing else is interpolated into a command.
   bus's own state file — the only thing Wool changes outside its directory.
 - **Network:** none, ever. No script here names a network tool, and a test
   says so, so it stays that way.
-- **Nothing runs while the wall is closed.** The scan is driven by the panel's
+- **The herdr half is one verb.** `wool/wool-herdr-sync.sh` runs `herd
+  sync-herdr` when herdr says an agent changed, and does nothing else — no
+  file of its own, no arguments, and a missing `herd` is silent rather than
+  fatal, because a hook that fails gets the plugin disabled by the thing that
+  ran it.
+- **Nothing runs while the wall is closed** — the Omarchy half, that is. The scan is driven by the panel's
   timer, and the panel does not tick when it is not open. That is the design,
   not an optimisation: an ungated version of this sweep once read 3.5MB/s of
   disk with nothing on screen.

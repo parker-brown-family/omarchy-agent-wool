@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- **Wool ships a herdr half.** `wool/herdr-plugin.toml` subscribes to herdr's
+  agent events and runs `herd sync-herdr`, so herdr's agents reach the bus when
+  they change rather than when someone opens the wall. Install it with `herdr
+  plugin install parker-brown-family/omarchy-agent-wool/wool`. It is one verb
+  and no state; the Omarchy half is unchanged and still scans nothing while the
+  wall is closed.
+
 - The widget is **Agent Wool** on the bar and at the top of the wall, and its
   icon is the sheep. Both moved here from the tray next door: Crook wore the
   sheep only because Nerd Fonts carries no shepherd's crook, and now that Crook
